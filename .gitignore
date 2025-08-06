@@ -1,0 +1,73 @@
+# R specific files
+.Rhistory
+.RData
+.Ruserdata
+.Rapp.history
+
+# R package files
+*.Rcheck/
+*.tar.gz
+*.tgz
+*.zip
+
+# RStudio files
+.Rproj.user/
+*.Rproj
+
+# Data files - ignore all rds except those in input directory
+*.rds
+!input/*.rds
+*.csv
+*.pdf
+
+# Output files
+output/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Log files
+*.log
+
+# renv - ignore entire directory except lockfile and activate script
+renv/
+!renv.lock
+!renv/activate.R
+
+# Additional data formats to ignore
+*.xlsx
+*.xls
+*.dta
+*.sav
+*.json
+*.parquet
+*.feather
+*.dat
+*.txt
+
+# But allow documentation and script files
+!*.md
+!*.R
+!*.Rmd
+!*.sh
+!Makefile
+!LICENSE
+!DESCRIPTION
+!NAMESPACE 
