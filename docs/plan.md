@@ -90,11 +90,11 @@ sim-coverage/
   - `se_first`: Named numeric vector of SEs from first iteration
 
 #### `coverage_report.R`
-- Function: `coverage_report(bootstrap_results, parameters)`
+- Function: `coverage_report(bootstrap_results, parameters, output_folder)`
 - Computes:
   - Mean beta estimates.
   - Confidence interval coverage: % of times true value is inside 95% CI.
-  - Histograms of beta distributions with vertical lines for true values and CI.
+  - Histogram of beta['gf'] distribution with vertical lines for true values and CI.
 - Output:
   - A named list with summary stats and plots.
   - Plots saved to output folder (if specified).
