@@ -1,4 +1,4 @@
-# Creates simulated w dataset with 100,000 observations
+# Creates simulated covariates w dataset with 100,000 observations
 ########################################################
 rm(list = ls())
 
@@ -8,7 +8,7 @@ library(SimMultiCorrData)
 set.seed(123)
 
 # Load inputs
-inputs <- readRDS("input/means_sd_cov_mat.BRC.std.rds")
+inputs <- readRDS("assets/means_sd_cov_mat.BRC.std.rds")
 means <- as.numeric(inputs$means[1, ])
 names(means) <- colnames(inputs$means)
 cov_mat <- inputs$cov_mat
@@ -161,7 +161,18 @@ simulated_df |>
 cat("Final simulated_df dimensions:", dim(simulated_df), "\n")
 glimpse(simulated_df)
 
+# Compute sample mean and vcov
+sample_mean <- colMeans(simulated_df |> as.data.frame())
+sample_vcov <- cov(simulated_df |> as.data.frame())
+
+# Save all as a named list
+output <- list(
+  simulated_df = simulated_df,
+  sample_mean = sample_mean,
+  sample_vcov = sample_vcov
+)
+
 # Save the simulated data
-dir.create("output", showWarnings = FALSE)
-saveRDS(simulated_df, "output/simulated_w.rds")
-cat("Simulated data saved to output/simulated_w.rds\n")
+dir.create("data", showWarnings = FALSE)
+saveRDS(output, "data/simulated_covariates.rds")
+cat("Simulated data (with mean and vcov) saved to data/simulated_covariates.rds\n")

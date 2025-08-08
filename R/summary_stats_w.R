@@ -3,18 +3,19 @@ rm(list = ls())
 library(tidyverse)
 
 # Create output directory
-dir.create("summary_stats/w", showWarnings = FALSE, recursive = TRUE)
+dir.create("output/simulated_w_stats", showWarnings = FALSE, recursive = TRUE)
 
-# Load the simulated data
-simulated_df <- readRDS("output/simulated_w.rds")
+# Load the simulated data (new format)
+simulated_data <- readRDS("data/simulated_covariates.rds")
+simulated_df <- simulated_data$simulated_df
 
 # Load the original inputs for comparison
-inputs <- readRDS("input/means_sd_cov_mat.BRC.std.rds")
+inputs <- readRDS("assets/means_sd_cov_mat.BRC.std.rds")
 means <- as.numeric(inputs$means[1, ])
 names(means) <- colnames(inputs$means)
 cov_mat <- inputs$cov_mat
 
-# Define variable names by type (same as in simulate_w.R)
+# Define variable names by type (same as in simulate_covariates.R)
 binary_vars <- c("Smoker_i0", "ExSmoker_i0", "phys_inact_i0", "array_bit",
                  "ever_brc_screening_i0", "ever_hrt_i0", "ever_ocp_i0",
                  "ever_live_birth_bit", "mother_BRC", "siblings_BRC", "T1D_bit")
@@ -68,8 +69,8 @@ summary_stats <- data.frame(
   })
 )
 
-write.csv(summary_stats, "summary_stats/w/summary_table.csv", row.names = FALSE)
-cat("Summary table saved to summary_stats/w/summary_table.csv\n")
+write.csv(summary_stats, "output/simulated_w_stats/summary_table.csv", row.names = FALSE)
+cat("Summary table saved to output/simulated_w_stats/summary_table.csv\n")
 
 # 2. Target and simulated correlation matrices
 # Subset covariance matrix to match our variables
@@ -79,9 +80,9 @@ target_corr <- cov2cor(cov_mat_subset)
 # Calculate simulated correlation matrix
 simulated_corr <- cor(simulated_df)
 
-write.csv(target_corr, "summary_stats/w/target_correlation_matrix.csv")
-write.csv(simulated_corr, "summary_stats/w/simulated_correlation_matrix.csv")
-cat("Correlation matrices saved to summary_stats/w/\n")
+write.csv(target_corr, "output/simulated_w_stats/target_correlation_matrix.csv")
+write.csv(simulated_corr, "output/simulated_w_stats/simulated_correlation_matrix.csv")
+cat("Correlation matrices saved to output/simulated_w_stats/\n")
 
 # 3. Target and simulated means
 target_means <- means[all_vars]
@@ -95,12 +96,12 @@ means_comparison <- data.frame(
   percent_diff = ((simulated_means - target_means) / target_means) * 100
 )
 
-write.csv(means_comparison, "summary_stats/w/means_comparison.csv", row.names = FALSE)
-cat("Means comparison saved to summary_stats/w/means_comparison.csv\n")
+write.csv(means_comparison, "output/simulated_w_stats/means_comparison.csv", row.names = FALSE)
+cat("Means comparison saved to output/simulated_w_stats/means_comparison.csv\n")
 
 # 4. Create histograms for all variables
 # Set up the plotting device for 16:9 aspect ratio
-pdf("summary_stats/w/variable_histograms.pdf", width = 16, height = 9)
+pdf("output/simulated_w_stats/variable_histograms.pdf", width = 16, height = 9)
 
 # Calculate number of rows and columns for subplot layout
 n_vars <- length(all_vars)
@@ -130,7 +131,7 @@ for (var in all_vars) {
 }
 
 dev.off()
-cat("Histograms saved to summary_stats/w/variable_histograms.pdf\n")
+cat("Histograms saved to output/simulated_w_stats/variable_histograms.pdf\n")
 
 # 5. Additional summary statistics by variable type
 cat("\n=== SUMMARY BY VARIABLE TYPE ===\n")
@@ -165,4 +166,4 @@ count_summary <- data.frame(
 )
 print(count_summary)
 
-cat("\nAll summary files saved to summary_stats/w/ directory\n") 
+cat("\nAll summary files saved to output/simulated_w_stats/ directory\n") 

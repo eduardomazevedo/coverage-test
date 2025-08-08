@@ -64,10 +64,11 @@ sim-coverage/
 
 ### `R/`: Core R Functions
 
-#### `simulate_covariates.R`
-- Function: `simulate_covariates(n, stats_path)`
-- Uses summary stats to simulate covariates `W` (e.g. multivariate normal).
-- Output: Saves a data frame of covariates to `data/covariate_draws.rds`.
+#### `simulate_covariates.R` (script)
+- This script is intended to be run **once** to generate a large pool of simulated covariates for all downstream simulations.
+- Reads summary statistics (means, variances, covariances, etc.) from a reference file (e.g., `assets/covariate_stats.rds`).
+- Simulates a large data frame of covariates `W` (e.g., using multivariate normal or appropriate distributions).
+- Saves the resulting data frame to `data/covariate_draws.rds` for reuse in all simulation experiments.
 
 #### `simulate_dataset.R`
 - Function: `simulate_dataset(n, parameters, w_pool)`
