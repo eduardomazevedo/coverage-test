@@ -7,6 +7,7 @@ simulate_probit <- function(n_observations, params, w_cache) {
   w <- w_cache$simulated_df |>
     slice_sample(n = n_observations, replace = TRUE) |>
     select(all_of(covariate_names))
+  w[] <- lapply(w, function(col) as.numeric(col))
   
   # Simulate gf = theta * w + Gaussian noise
   w_with_intercept <- cbind("(Intercept)" = 1, w)
@@ -18,7 +19,8 @@ simulate_probit <- function(n_observations, params, w_cache) {
   
   # Simulate disease status y
   design_matrix <- cbind("(Intercept)" = 1, "gf" = gf, w)
-  stopifnot(identical(names(params$beta), c("(Intercept)", "gf", colnames(w))))
+  design_matrix <- design_matrix[, names(params$beta)]
+  stopifnot(identical(names(params$beta), names(design_matrix)))
   latent_y <- as.matrix(design_matrix) %*% params$beta + rnorm(nrow(w), 0, 1)
   y <- latent_y > 0
   
