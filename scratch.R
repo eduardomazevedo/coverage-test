@@ -1,24 +1,30 @@
-# Example usage:
-model_type <- "probit"
-n_observations <- 10000
-n_bootstraps <- 1000  # Increased for better coverage analysis
+rm(list = ls())
+source("R/simulate_cox.R")
+library(hapr)
+library(survival)
+
+params <- readRDS("assets/summary_object_brc_cox_snph2.rds")
 w_cache <- readRDS("data/simulated_covariates.rds")
-params <- readRDS("assets/summary_object_brc_probit_snph2.rds")
 
-# Source required functions
-source("R/bootstrap_simulations.R")
+simulated <- simulate_cox(
+  n_observations = 1e4,
+  params = params,
+  w_cache = w_cache
+)
 
-# Run bootstrap simulations
-bootstrap_results <- bootstrap_simulations(n_observations, n_bootstraps, params, w_cache)
+# Build full Surv object once
+surv_obj <- Surv(
+  time = simulated$time,
+  event = simulated$status
+)
 
-# Generate coverage report
-source("R/coverage_report.R")
-report <- coverage_report(bootstrap_results, params, "output/plots")
+fit <- hapr::hapr(
+  y = surv_obj,
+  gc = simulated$gc,
+  w = simulated$w,
+  model_type = "cox",
+  improvement_ratio = params$improvement_ratio
+)
 
-# Access results
-print("Bootstrap Results Structure:")
-print(str(bootstrap_results$betas))
-print(str(bootstrap_results$standard_errors))
-
-print("\nCoverage Report Summary:")
-print(report$summary_stats)
+beta_hat <- fit$coefficients$beta
+se_hat <- fit$standard_errors
