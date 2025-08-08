@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.5.0",
+    "Version": "4.4.0",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -38,7 +38,8 @@
       "NeedsCompilation": "no",
       "Author": "Ravi Varadhan [aut, cph, trl], Paul Gilbert [aut, cre], Marcos Raydan [ctb] (with co-authors, wrote original algorithms in fortran. These provided some guidance for implementing R code in the BB package.), JM Martinez [ctb] (with co-authors, wrote original algorithms in fortran. These provided some guidance for implementing R code in the BB package.), EG Birgin [ctb] (with co-authors, wrote original algorithms in fortran. These provided some guidance for implementing R code in the BB package.), W LaCruz [ctb] (with co-authors, wrote original algorithms in fortran. These provided some guidance for implementing R code in the BB package.)",
       "Maintainer": "Paul Gilbert <pgilbert.ttv9z@ncf.ca>",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "DBI": {
       "Package": "DBI",
@@ -108,7 +109,8 @@
       "NeedsCompilation": "no",
       "Author": "Coen Bernaards [aut, cre], Paul Gilbert [aut], Robert Jennrich [aut]",
       "Maintainer": "Coen Bernaards <cab.gparotation@gmail.com>",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "GenOrd": {
       "Package": "GenOrd",
@@ -129,7 +131,8 @@
         "stats"
       ],
       "NeedsCompilation": "no",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "MASS": {
       "Package": "MASS",
@@ -165,7 +168,8 @@
       "NeedsCompilation": "yes",
       "Author": "Brian Ripley [aut, cre, cph], Bill Venables [aut, cph], Douglas M. Bates [ctb], Kurt Hornik [trl] (partial port ca 1998), Albrecht Gebhardt [trl] (partial port ca 1998), David Firth [ctb] (support functions for polr)",
       "Maintainer": "Brian Ripley <Brian.Ripley@R-project.org>",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "Matrix": {
       "Package": "Matrix",
@@ -326,7 +330,8 @@
       "BuildVignettes": "yes",
       "LazyLoad": "yes",
       "LazyData": "yes",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "askpass": {
       "Package": "askpass",
@@ -1774,6 +1779,43 @@
       "Maintainer": "Thomas Lin Pedersen <thomas.pedersen@posit.co>",
       "Repository": "CRAN"
     },
+    "hapr": {
+      "Package": "hapr",
+      "Version": "0.0.0.9000",
+      "Source": "GitHub",
+      "Title": "What the Package Does (One Line, Title Case)",
+      "Authors@R": "person(\"First\", \"Last\", , \"first.last@example.com\", role = c(\"aut\", \"cre\"))",
+      "Description": "What the package does (one paragraph).",
+      "License": "MIT + file LICENSE",
+      "Encoding": "UTF-8",
+      "URL": "https://eduardomazevedo.github.io/hapr",
+      "Roxygen": "list(markdown = TRUE)",
+      "RoxygenNote": "7.3.2",
+      "Suggests": [
+        "ggplot2",
+        "knitr",
+        "rmarkdown",
+        "tidyverse",
+        "devtools",
+        "testthat (>= 3.0.0)"
+      ],
+      "Config/testthat/edition": "3",
+      "Imports": [
+        "survival",
+        "numDeriv",
+        "stats"
+      ],
+      "VignetteBuilder": "knitr",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "hapr",
+      "RemoteUsername": "eduardomazevedo",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "5cbcf6ad39758fda11438b71fd682b9d815dad9b",
+      "NeedsCompilation": "no",
+      "Author": "First Last [aut, cre]",
+      "Maintainer": "First Last <first.last@example.com>"
+    },
     "haven": {
       "Package": "haven",
       "Version": "2.5.5",
@@ -2502,7 +2544,8 @@
       "Description": "Solve a system of nonlinear equations using a Broyden or a Newton method with a choice of global strategies such as line search and trust region. There are options for using a numerical or user supplied Jacobian, for specifying a banded numerical Jacobian and for allowing a singular or ill-conditioned Jacobian.",
       "License": "GPL (>= 2)",
       "NeedsCompilation": "yes",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "nlme": {
       "Package": "nlme",
@@ -2537,6 +2580,26 @@
       "Author": "José Pinheiro [aut] (S version), Douglas Bates [aut] (up to 2007), Saikat DebRoy [ctb] (up to 2002), Deepayan Sarkar [ctb] (up to 2005), EISPACK authors [ctb] (src/rs.f), Siem Heisterkamp [ctb] (Author fixed sigma), Bert Van Willigen [ctb] (Programmer fixed sigma), Johannes Ranke [ctb] (varConstProp()), R Core Team [aut, cre] (02zz1nj61)",
       "Maintainer": "R Core Team <R-core@R-project.org>",
       "Repository": "CRAN"
+    },
+    "numDeriv": {
+      "Package": "numDeriv",
+      "Version": "2016.8-1.1",
+      "Source": "Repository",
+      "Title": "Accurate Numerical Derivatives",
+      "Description": "Methods for calculating (usually) accurate numerical first and second order derivatives. Accurate calculations  are done using 'Richardson''s' extrapolation or, when applicable, a complex step derivative is available. A simple difference  method is also provided. Simple difference is (usually) less accurate but is much quicker than 'Richardson''s' extrapolation and provides a  useful cross-check.  Methods are provided for real scalar and vector valued functions.",
+      "Depends": [
+        "R (>= 2.11.1)"
+      ],
+      "LazyLoad": "yes",
+      "ByteCompile": "yes",
+      "License": "GPL-2",
+      "Copyright": "2006-2011, Bank of Canada. 2012-2016, Paul Gilbert",
+      "Author": "Paul Gilbert and Ravi Varadhan",
+      "Maintainer": "Paul Gilbert <pgilbert.ttv9z@ncf.ca>",
+      "URL": "http://optimizer.r-forge.r-project.org/",
+      "NeedsCompilation": "no",
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "openssl": {
       "Package": "openssl",
@@ -2825,7 +2888,8 @@
       "NeedsCompilation": "no",
       "Author": "William Revelle [aut, cre] (ORCID: <https://orcid.org/0000-0003-4880-9610>)",
       "Maintainer": "William Revelle <revelle@northwestern.edu>",
-      "Repository": "CRAN"
+      "Repository": "RSPM",
+      "Encoding": "UTF-8"
     },
     "purrr": {
       "Package": "purrr",

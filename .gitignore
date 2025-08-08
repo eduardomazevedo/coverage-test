@@ -20,7 +20,8 @@
 *.csv
 *.pdf
 
-# Output files
+# Output and data folders
+data/
 output/
 
 # OS generated files
