@@ -14,7 +14,8 @@ bootstrap_results <- bootstrap_simulations(
   n_obs = n_obs,
   n_bootstraps = n_bootstraps,
   parameters = params,
-  w_pool = w_cache)
+  w_pool = w_cache,
+  softmax_correction = "softmax-slow")
 
 report <- coverage_report(
   bootstrap_results = bootstrap_results,

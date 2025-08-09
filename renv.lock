@@ -1811,7 +1811,7 @@
       "RemoteRepo": "hapr",
       "RemoteUsername": "eduardomazevedo",
       "RemoteRef": "HEAD",
-      "RemoteSha": "5cbcf6ad39758fda11438b71fd682b9d815dad9b",
+      "RemoteSha": "c6039814aa873a03f3c5e45aa8dc3af442b8f2d7",
       "NeedsCompilation": "no",
       "Author": "First Last [aut, cre]",
       "Maintainer": "First Last <first.last@example.com>"
@@ -2598,8 +2598,7 @@
       "Maintainer": "Paul Gilbert <pgilbert.ttv9z@ncf.ca>",
       "URL": "http://optimizer.r-forge.r-project.org/",
       "NeedsCompilation": "no",
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
+      "Repository": "CRAN"
     },
     "openssl": {
       "Package": "openssl",

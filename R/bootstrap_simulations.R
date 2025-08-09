@@ -1,4 +1,4 @@
-bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool) {
+bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool, softmax_correction = "clt") {
   # Extract model type
   model_type <- parameters$model_type
   
@@ -14,6 +14,10 @@ bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool) {
   colnames(beta_estimates) <- true_beta_names
   se_estimates <- matrix(NA, nrow = n_bootstraps, ncol = length(true_beta_names))
   colnames(se_estimates) <- true_beta_names
+  psi_estimates <- matrix(NA, nrow = n_bootstraps, ncol = 1)
+  colnames(psi_estimates) <- "psi_hat"
+  alpha_estimates <- matrix(NA, nrow = n_bootstraps, ncol = 1)
+  colnames(alpha_estimates) <- "alpha_hat"
   
   for (i in 1:n_bootstraps) {
     # Simulate dataset based on model type
@@ -31,12 +35,18 @@ bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool) {
       gc = simulated_dataset$gc,
       w = simulated_dataset$w,
       model_type = model_type,
-      improvement_ratio = parameters$improvement_ratio
+      improvement_ratio = parameters$improvement_ratio,
+      softmax_correction = softmax_correction
     )
     
     # Extract estimates
     beta_hat <- fit$coefficients$beta
     se_hat <- fit$standard_errors
+
+    if (model_type == "cox") {
+      psi_hat <- fit$stats$psi_hat
+      alpha_hat <- fit$stats$alpha_hat
+    }
     
     # Check names for consistency
     stopifnot(identical(names(beta_hat), true_beta_names))
@@ -45,6 +55,10 @@ bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool) {
     # Store
     beta_estimates[i, ] <- beta_hat
     se_estimates[i, ] <- se_hat
+    if (model_type == "cox") {
+      psi_estimates[i, ] <- psi_hat
+      alpha_estimates[i, ] <- alpha_hat
+    }
   }
   
   # Convert to data frames
@@ -56,6 +70,8 @@ bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool) {
   
   list(
     betas = betas_df,
-    standard_errors = se_df
+    standard_errors = se_df,
+    psi_hat = mean(psi_estimates),
+    alpha_hat = mean(alpha_estimates)
   )
 }

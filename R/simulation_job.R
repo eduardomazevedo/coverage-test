@@ -39,39 +39,89 @@ for (n_obs in sample_sizes) {
 
     message(sprintf("Starting parameter set: %s (n = %s)", param_basename, format(n_obs, scientific = FALSE, trim = TRUE)))
 
-    # Create organized output directory: output/<param_basename>/n_<size>/
-    out_dir <- file.path(base_output_dir, param_basename, paste0("n_", format(n_obs, scientific = FALSE, trim = TRUE)))
-    if (dir.exists(out_dir)) {
-      message(sprintf("  - Skipping: results directory already exists (%s)", out_dir))
-      next
+    if (identical(params$model_type, "cox")) {
+      # For Cox, run all three softmax correction variants
+      correction_variants <- c("clt", "softmax-slow", "softmax-fast")
+      for (corr in correction_variants) {
+        # Organized output directory: output/<param_basename>/n_<size>/softmax_<corr>/
+        out_dir <- file.path(
+          base_output_dir,
+          param_basename,
+          paste0("n_", format(n_obs, scientific = FALSE, trim = TRUE)),
+          paste0("softmax_", corr)
+        )
+
+        if (dir.exists(out_dir)) {
+          message(sprintf("  - Skipping: results directory already exists (%s)", out_dir))
+          next
+        }
+
+        dir.create(out_dir, recursive = TRUE)
+
+        message(sprintf("  - Running with %s bootstraps (softmax_correction = %s)", n_bootstraps, corr))
+
+        bootstrap_results <- bootstrap_simulations(
+          n_obs = n_obs,
+          n_bootstraps = n_bootstraps,
+          parameters = params,
+          w_pool = w_cache,
+          softmax_correction = corr
+        )
+
+        # Persist raw bootstrap results for reproducibility
+        saveRDS(bootstrap_results, file.path(out_dir, "bootstrap_results.rds"))
+
+        # Generate and save coverage report (plots + summary CSV)
+        report <- coverage_report(
+          bootstrap_results = bootstrap_results,
+          parameters = params,
+          output_folder = out_dir
+        )
+
+        # Optionally also save the summary stats as an RDS for easy re-load in R
+        saveRDS(report$summary_stats, file.path(out_dir, "summary_stats.rds"))
+
+        message(sprintf(
+          "    Completed: %s (n = %s, softmax_correction = %s)",
+          param_basename,
+          format(n_obs, scientific = FALSE, trim = TRUE),
+          corr
+        ))
+      }
+    } else {
+      # Non-Cox models: behavior unchanged
+      out_dir <- file.path(base_output_dir, param_basename, paste0("n_", format(n_obs, scientific = FALSE, trim = TRUE)))
+      if (dir.exists(out_dir)) {
+        message(sprintf("  - Skipping: results directory already exists (%s)", out_dir))
+        next
+      }
+
+      dir.create(out_dir, recursive = TRUE)
+
+      message(sprintf("  - Running with %s bootstraps", n_bootstraps))
+
+      bootstrap_results <- bootstrap_simulations(
+        n_obs = n_obs,
+        n_bootstraps = n_bootstraps,
+        parameters = params,
+        w_pool = w_cache
+      )
+
+      # Persist raw bootstrap results for reproducibility
+      saveRDS(bootstrap_results, file.path(out_dir, "bootstrap_results.rds"))
+
+      # Generate and save coverage report (plots + summary CSV)
+      report <- coverage_report(
+        bootstrap_results = bootstrap_results,
+        parameters = params,
+        output_folder = out_dir
+      )
+
+      # Optionally also save the summary stats as an RDS for easy re-load in R
+      saveRDS(report$summary_stats, file.path(out_dir, "summary_stats.rds"))
+
+      message(sprintf("    Completed: %s (n = %s)", param_basename, format(n_obs, scientific = FALSE, trim = TRUE)))
     }
-
-    dir.create(out_dir, recursive = TRUE)
-
-    message(sprintf("  - Running with %s bootstraps", n_bootstraps))
-
-    # Run bootstrap simulation
-    bootstrap_results <- bootstrap_simulations(
-      n_obs = n_obs,
-      n_bootstraps = n_bootstraps,
-      parameters = params,
-      w_pool = w_cache
-    )
-
-    # Persist raw bootstrap results for reproducibility
-    saveRDS(bootstrap_results, file.path(out_dir, "bootstrap_results.rds"))
-
-    # Generate and save coverage report (plots + summary CSV)
-    report <- coverage_report(
-      bootstrap_results = bootstrap_results,
-      parameters = params,
-      output_folder = out_dir
-    )
-
-    # Optionally also save the summary stats as an RDS for easy re-load in R
-    saveRDS(report$summary_stats, file.path(out_dir, "summary_stats.rds"))
-
-    message(sprintf("    Completed: %s (n = %s)", param_basename, format(n_obs, scientific = FALSE, trim = TRUE)))
   }
 }
 
