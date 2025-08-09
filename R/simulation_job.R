@@ -1,4 +1,4 @@
-# Job script to run simulations across parameter sets and sample sizes
+# Job script to run simulations across sample sizes and parameter sets
 
 # Load required source files (follow sample syntax from `scratch.R`)
 source("R/bootstrap_simulations.R")
@@ -23,7 +23,7 @@ w_cache <- readRDS("data/simulated_covariates.rds")
 
 # Configuration
 n_bootstraps <- 1000L
-sample_sizes <- c(1e3, 1e4)
+sample_sizes <- c(1e3, 1e4, 1e5, 1e6)
 
 # Ensure base output directory exists
 base_output_dir <- "output"
@@ -31,25 +31,24 @@ if (!dir.exists(base_output_dir)) {
   dir.create(base_output_dir, recursive = TRUE)
 }
 
-# Iterate over parameter sets and sample sizes
-for (param_path in param_files) {
-  params <- readRDS(param_path)
-  param_basename <- tools::file_path_sans_ext(basename(param_path))
+# Iterate over sample sizes and parameter sets
+for (n_obs in sample_sizes) {
+  for (param_path in param_files) {
+    params <- readRDS(param_path)
+    param_basename <- tools::file_path_sans_ext(basename(param_path))
 
-  message(sprintf("Starting parameter set: %s", param_basename))
+    message(sprintf("Starting parameter set: %s (n = %s)", param_basename, format(n_obs, scientific = FALSE, trim = TRUE)))
 
-  for (n_obs in sample_sizes) {
     # Create organized output directory: output/<param_basename>/n_<size>/
     out_dir <- file.path(base_output_dir, param_basename, paste0("n_", format(n_obs, scientific = FALSE, trim = TRUE)))
     if (dir.exists(out_dir)) {
-      message(sprintf("  - Skipping n_obs = %s: results directory already exists (%s)",
-                      format(n_obs, scientific = FALSE, trim = TRUE), out_dir))
+      message(sprintf("  - Skipping: results directory already exists (%s)", out_dir))
       next
     }
 
     dir.create(out_dir, recursive = TRUE)
 
-    message(sprintf("  - Running n_obs = %s with %s bootstraps", format(n_obs, scientific = FALSE, trim = TRUE), n_bootstraps))
+    message(sprintf("  - Running with %s bootstraps", n_bootstraps))
 
     # Run bootstrap simulation
     bootstrap_results <- bootstrap_simulations(
@@ -72,7 +71,7 @@ for (param_path in param_files) {
     # Optionally also save the summary stats as an RDS for easy re-load in R
     saveRDS(report$summary_stats, file.path(out_dir, "summary_stats.rds"))
 
-    message(sprintf("    Completed: %s (n=%s)", param_basename, format(n_obs, scientific = FALSE, trim = TRUE)))
+    message(sprintf("    Completed: %s (n = %s)", param_basename, format(n_obs, scientific = FALSE, trim = TRUE)))
   }
 }
 
