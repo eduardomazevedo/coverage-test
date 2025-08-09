@@ -1,30 +1,23 @@
 rm(list = ls())
+
+source("R/bootstrap_simulations.R")
+source("R/coverage_report.R")
 source("R/simulate_cox.R")
-library(hapr)
-library(survival)
+source("R/simulate_probit.R")
 
 params <- readRDS("assets/summary_object_brc_cox_snph2.rds")
 w_cache <- readRDS("data/simulated_covariates.rds")
+n_obs <- 1e3
+n_bootstraps <- 1e1
 
-simulated <- simulate_cox(
-  n_observations = 1e4,
-  params = params,
-  w_cache = w_cache
+bootstrap_results <- bootstrap_simulations(
+  n_obs = n_obs,
+  n_bootstraps = n_bootstraps,
+  parameters = params,
+  w_pool = w_cache)
+
+report <- coverage_report(
+  bootstrap_results = bootstrap_results,
+  parameters = params,
+  output_folder = "output/scratch"
 )
-
-# Build full Surv object once
-surv_obj <- Surv(
-  time = simulated$time,
-  event = simulated$status
-)
-
-fit <- hapr::hapr(
-  y = surv_obj,
-  gc = simulated$gc,
-  w = simulated$w,
-  model_type = "cox",
-  improvement_ratio = params$improvement_ratio
-)
-
-beta_hat <- fit$coefficients$beta
-se_hat <- fit$standard_errors

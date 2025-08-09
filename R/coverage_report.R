@@ -9,17 +9,12 @@ library(ggplot2)
 #' 
 #' @param bootstrap_results List containing bootstrap results from bootstrap_simulations()
 #' @param parameters DGP parameters object containing true beta values
-#' @param output_folder Optional path to save plots (if NULL, plots are not saved)
+#' @param output_folder Optional path to save plots and CSV (if NULL, outputs are not saved)
 #' @param confidence_level Confidence level for intervals (default: 0.95)
 #' 
 #' @return Named list containing:
 #'   - summary_stats: Data frame with true_beta, mean_beta_hat, stdev_beta_hat, mean_standard_error, coverage_percentage
 #'   - plots: List of ggplot objects for each parameter
-#' 
-#' @examples
-#' # parameters <- readRDS("assets/summary_object_brc_probit_snph2.rds")
-#' # bootstrap_results <- bootstrap_simulations(1000, 10, parameters, w_pool)
-#' # report <- coverage_report(bootstrap_results, parameters, "output/plots")
 coverage_report <- function(bootstrap_results, parameters, output_folder = NULL, confidence_level = 0.95) {
   
   # Extract true beta values
@@ -31,8 +26,7 @@ coverage_report <- function(bootstrap_results, parameters, output_folder = NULL,
   se_df <- bootstrap_results$standard_errors
   n_bootstraps <- nrow(betas_df)
   
-  # Calculate t-multiplier for confidence level
-  # Using normal distribution approximation for large n
+  # Calculate t-multiplier for confidence level (normal approximation)
   t_multiplier <- qnorm(1 - (1 - confidence_level) / 2)
   
   # Calculate summary statistics
@@ -50,34 +44,38 @@ coverage_report <- function(bootstrap_results, parameters, output_folder = NULL,
     true_val <- true_beta[name]
     beta_hats <- betas_df[[name]]
     se_hats <- se_df[[name]]
-    
-    # Calculate confidence intervals for each bootstrap
     ci_lower <- beta_hats - t_multiplier * se_hats
     ci_upper <- beta_hats + t_multiplier * se_hats
-    
-    # Count how many times true value is inside CI
     inside_ci <- sum(true_val >= ci_lower & true_val <= ci_upper, na.rm = TRUE)
     coverage_rate <- inside_ci / n_bootstraps
-    
     return(coverage_rate * 100)
   })
   
+  # Create output folder if needed
+  if (!is.null(output_folder)) {
+    if (!dir.exists(output_folder)) {
+      dir.create(output_folder, recursive = TRUE)
+    }
+  }
+  
+  # Save summary statistics CSV
+  if (!is.null(output_folder)) {
+    summary_csv_path <- file.path(output_folder, "summary_stats.csv")
+    write_csv(summary_stats, summary_csv_path)
+  }
+  
   # Create histograms for each parameter
   plots <- list()
-  
   for (param_name in beta_names) {
-    # Get data for this parameter
     param_data <- betas_df[[param_name]]
     true_val <- true_beta[param_name]
     mean_est <- summary_stats$mean_beta_hat[summary_stats$parameter == param_name]
     mean_se <- summary_stats$mean_standard_error[summary_stats$parameter == param_name]
     coverage_rate <- summary_stats$coverage_percentage[summary_stats$parameter == param_name]
     
-    # Calculate CI bounds using mean standard error
     ci_lower <- true_val - t_multiplier * mean_se
     ci_upper <- true_val + t_multiplier * mean_se
     
-    # Create histogram
     p <- ggplot(data.frame(estimate = param_data), aes(x = estimate)) +
       geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "black") +
       geom_vline(xintercept = true_val, color = "red", linetype = "solid", linewidth = 1.2) +
@@ -107,16 +105,10 @@ coverage_report <- function(bootstrap_results, parameters, output_folder = NULL,
     
     plots[[param_name]] <- p
     
-    # Save plot if output folder is specified
     if (!is.null(output_folder)) {
-      # Create output directory if it doesn't exist
-      if (!dir.exists(output_folder)) {
-        dir.create(output_folder, recursive = TRUE)
-      }
-      
-      # Save plot
+      plot_path <- file.path(output_folder, paste0(param_name, "_distribution.png"))
       ggsave(
-        filename = file.path(output_folder, paste0(param_name, "_distribution.png")),
+        filename = plot_path,
         plot = p,
         width = 8,
         height = 6,
@@ -125,34 +117,9 @@ coverage_report <- function(bootstrap_results, parameters, output_folder = NULL,
     }
   }
   
-  # Print summary to console
-  cat("=== Coverage Report ===\n")
-  cat("Confidence level:", confidence_level * 100, "%\n")
-  cat("Number of bootstraps:", n_bootstraps, "\n")
-  cat("t-multiplier:", round(t_multiplier, 3), "\n\n")
-  
-  cat("Parameter-specific coverage:\n")
-  for (i in 1:nrow(summary_stats)) {
-    cat(sprintf("  %s: %.1f%%\n", 
-                summary_stats$parameter[i], 
-                summary_stats$coverage_percentage[i]))
-  }
-  
   # Return results
   list(
     summary_stats = summary_stats,
     plots = plots
   )
 }
-
-# Example usage (commented out):
-# parameters <- readRDS("assets/summary_object_brc_probit_snph2.rds")
-# w_pool <- readRDS("data/simulated_covariates.rds")
-# bootstrap_results <- bootstrap_simulations(1000, 10, parameters, w_pool)
-# report <- coverage_report(bootstrap_results, parameters, "output/plots")
-# 
-# # Access results
-# print(report$summary_stats)
-# 
-# # Display a specific plot
-# print(report$plots[["gf"]])

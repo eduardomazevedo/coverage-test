@@ -9,8 +9,8 @@ simulate_cox <- function(
 ) {
   # Validate hazard/base rate inputs: exactly one must be provided
   if (is.null(target_average_hazard) == is.null(base_rate)) {
-    # warning("Using default base rate of 0.00554.")
-    base_rate <- 0.00554
+    # warning("Using default base rate")
+    base_rate <- 0.01 / 1.097758 # I set this to usually get about 0.01 average hazard
   }
   if (!is.null(target_average_hazard)) {
     if (!is.numeric(target_average_hazard) || length(target_average_hazard) != 1 || is.na(target_average_hazard) || target_average_hazard <= 0) {
@@ -39,10 +39,10 @@ simulate_cox <- function(
   gc <- gf + rnorm(nrow(w), 0, sqrt(params$var_epsilon))
 
   # Calculate relative risk (hazard ratio)
-  design_matrix <- cbind("(Intercept)" = 1, "gf" = gf, w)
+  design_matrix <- cbind("gf" = gf, w)
   design_matrix <- design_matrix[, names(params$beta)]
   stopifnot(identical(names(params$beta), names(design_matrix)))
-  linear_predictor <- as.matrix(design_matrix) %*% params$beta + rnorm(nrow(w), 0, 1)
+  linear_predictor <- as.matrix(design_matrix) %*% params$beta
   relative_risk <- exp(linear_predictor)
 
   # Calculate mean relative risk and choose base_rate accordingly
