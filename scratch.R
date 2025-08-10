@@ -1,24 +1,24 @@
 rm(list = ls())
 
-source("R/bootstrap_simulations.R")
+source("R/run_bootstrap.R")
 source("R/coverage_report.R")
-source("R/simulate_cox.R")
-source("R/simulate_probit.R")
 
-params <- readRDS("assets/summary_object_brc_cox_snph2.rds")
-w_cache <- readRDS("data/simulated_covariates.rds")
-n_obs <- 1e3
-n_bootstraps <- 1e1
+n_obs <- 1e5
+n_bootstraps <- 1e0
 
-bootstrap_results <- bootstrap_simulations(
+start_time <- Sys.time()
+bootstrap_results <- run_bootstrap(
+  model_type = "cox",
+  heritability_source = "snph2",
+  softmax_correction = "softmax-slow",
   n_obs = n_obs,
-  n_bootstraps = n_bootstraps,
-  parameters = params,
-  w_pool = w_cache,
-  softmax_correction = "softmax-slow")
-
-report <- coverage_report(
-  bootstrap_results = bootstrap_results,
-  parameters = params,
-  output_folder = "output/scratch"
+  n_bootstraps = n_bootstraps
 )
+end_time <- Sys.time()
+elapsed_time <- end_time - start_time
+print(sprintf("Bootstrap simulations took %.2f seconds.", as.numeric(elapsed_time, units = "secs")))
+
+# report <- coverage_report(
+#   bootstrap_results = bootstrap_results,
+#   output_folder = "output/scratch"
+# )

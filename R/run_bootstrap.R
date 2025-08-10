@@ -1,9 +1,18 @@
-bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool, softmax_correction = "clt") {
-  # Extract model type
-  model_type <- parameters$model_type
+run_bootstrap <- function(model_type, heritability_source, softmax_correction = "clt", n_obs, n_bootstraps) {
+  # Functions
+  source("R/simulate_cox.R")
+  source("R/simulate_probit.R")
+  source("R/simulate_lm.R")  
+  source("R/get_params.R")
+  
+  # Load w_pool
+  w_pool <- readRDS("data/simulated_covariates.rds")
   
   # Validate model type
-  stopifnot(model_type %in% c("probit", "cox"))
+  stopifnot(model_type %in% c("probit", "cox", "lm"))
+
+  # Load parameters
+  parameters <- get_params(model_type, heritability_source)
   
   # Extract true beta names for consistency checks
   true_beta <- parameters$beta
@@ -23,6 +32,9 @@ bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool, softm
     # Simulate dataset based on model type
     if (model_type == "probit") {
       simulated_dataset <- simulate_probit(n_obs, parameters, w_pool)
+      y_input <- simulated_dataset$y
+    } else if (model_type == "lm") {
+      simulated_dataset <- simulate_lm(n_obs, parameters, w_pool)
       y_input <- simulated_dataset$y
     } else if (model_type == "cox") {
       simulated_dataset <- simulate_cox(n_obs, parameters, w_pool)
@@ -69,9 +81,15 @@ bootstrap_simulations <- function(n_obs, n_bootstraps, parameters, w_pool, softm
   se_df$bootstrap_id <- 1:n_bootstraps
   
   list(
-    betas = betas_df,
-    standard_errors = se_df,
-    psi_hat = mean(psi_estimates),
-    alpha_hat = mean(alpha_estimates)
+    model_type = model_type,
+    heritability_source = heritability_source,
+    softmax_correction = softmax_correction,
+    n_obs = n_obs,
+    n_bootstraps = n_bootstraps,
+    true_beta = true_beta,
+    betas_df = betas_df,
+    se_df = se_df,
+    psi_estimates = psi_estimates,
+    alpha_estimates = alpha_estimates
   )
 }

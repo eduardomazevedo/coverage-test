@@ -1,34 +1,17 @@
-library(tidyverse)
-library(ggplot2)
-
-#' Coverage Report for Bootstrap Simulations
-#' 
-#' Computes coverage statistics using standard errors from each bootstrap iteration.
-#' Calculates confidence intervals as beta_hat ± t_multiplier * standard_error_hat
-#' and measures coverage as percentage of times true value falls within these CIs.
-#' 
-#' @param bootstrap_results List containing bootstrap results from bootstrap_simulations()
-#' @param parameters DGP parameters object containing true beta values
-#' @param output_folder Optional path to save plots and CSV (if NULL, outputs are not saved)
-#' @param confidence_level Confidence level for intervals (default: 0.95)
-#' 
-#' @return Named list containing:
-#'   - summary_stats: Data frame with true_beta, mean_beta_hat, stdev_beta_hat, mean_standard_error, coverage_percentage
-#'   - plots: List of ggplot objects for each parameter
 coverage_report <- function(bootstrap_results, parameters, output_folder = NULL, confidence_level = 0.95) {
-  
   # Extract true beta values
   true_beta <- parameters$beta
   beta_names <- names(true_beta)
-  
-  # Get bootstrap results
+
+  # Extract beta and SE matrices
   betas_df <- bootstrap_results$betas
   se_df <- bootstrap_results$standard_errors
+
+  stopifnot(nrow(betas_df) == nrow(se_df))
   n_bootstraps <- nrow(betas_df)
-  
-  # Calculate t-multiplier for confidence level (normal approximation)
+
   t_multiplier <- qnorm(1 - (1 - confidence_level) / 2)
-  
+
   # Calculate summary statistics
   summary_stats <- data.frame(
     parameter = beta_names,
@@ -38,45 +21,36 @@ coverage_report <- function(bootstrap_results, parameters, output_folder = NULL,
     mean_standard_error = sapply(beta_names, function(name) mean(se_df[[name]], na.rm = TRUE)),
     stringsAsFactors = FALSE
   )
-  
-  # Calculate coverage for each parameter
+
+  # Calculate coverage
   summary_stats$coverage_percentage <- sapply(beta_names, function(name) {
-    true_val <- true_beta[name]
     beta_hats <- betas_df[[name]]
     se_hats <- se_df[[name]]
+    true_val <- true_beta[[name]]
     ci_lower <- beta_hats - t_multiplier * se_hats
     ci_upper <- beta_hats + t_multiplier * se_hats
     inside_ci <- sum(true_val >= ci_lower & true_val <= ci_upper, na.rm = TRUE)
-    coverage_rate <- inside_ci / n_bootstraps
-    return(coverage_rate * 100)
+    return(100 * inside_ci / n_bootstraps)
   })
-  
-  # Create output folder if needed
+
+  # Save summary statistics
   if (!is.null(output_folder)) {
-    if (!dir.exists(output_folder)) {
-      dir.create(output_folder, recursive = TRUE)
-    }
+    if (!dir.exists(output_folder)) dir.create(output_folder, recursive = TRUE)
+    write_csv(summary_stats, file.path(output_folder, "summary_stats.csv"))
   }
-  
-  # Save summary statistics CSV
-  if (!is.null(output_folder)) {
-    summary_csv_path <- file.path(output_folder, "summary_stats.csv")
-    write_csv(summary_stats, summary_csv_path)
-  }
-  
-  # Create histograms for each parameter
+
+  # Create plots
   plots <- list()
   for (param_name in beta_names) {
-    param_data <- betas_df[[param_name]]
-    true_val <- true_beta[param_name]
-    mean_est <- summary_stats$mean_beta_hat[summary_stats$parameter == param_name]
-    mean_se <- summary_stats$mean_standard_error[summary_stats$parameter == param_name]
+    beta_hats <- betas_df[[param_name]]
+    true_val <- true_beta[[param_name]]
+    mean_est <- mean(beta_hats, na.rm = TRUE)
+    mean_se <- mean(se_df[[param_name]], na.rm = TRUE)
     coverage_rate <- summary_stats$coverage_percentage[summary_stats$parameter == param_name]
-    
     ci_lower <- true_val - t_multiplier * mean_se
     ci_upper <- true_val + t_multiplier * mean_se
-    
-    p <- ggplot(data.frame(estimate = param_data), aes(x = estimate)) +
+
+    p <- ggplot(data.frame(estimate = beta_hats), aes(x = estimate)) +
       geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "black") +
       geom_vline(xintercept = true_val, color = "red", linetype = "solid", linewidth = 1.2) +
       geom_vline(xintercept = mean_est, color = "green", linetype = "solid", linewidth = 1) +
@@ -91,9 +65,7 @@ coverage_report <- function(bootstrap_results, parameters, output_folder = NULL,
         x = "Parameter Estimate",
         y = "Frequency",
         caption = paste0(
-          "Red line = True value, ",
-          "Green line = Mean estimate, ",
-          "Orange lines = True value ± ", confidence_level * 100, "% CI"
+          "Red = True value, Green = Mean estimate, Orange = ±", confidence_level * 100, "% CI"
         )
       ) +
       theme_minimal() +
@@ -102,24 +74,20 @@ coverage_report <- function(bootstrap_results, parameters, output_folder = NULL,
         plot.subtitle = element_text(size = 12),
         plot.caption = element_text(size = 10, color = "gray50")
       )
-    
+
     plots[[param_name]] <- p
-    
+
     if (!is.null(output_folder)) {
-      plot_path <- file.path(output_folder, paste0(param_name, "_distribution.png"))
       ggsave(
-        filename = plot_path,
+        filename = file.path(output_folder, paste0(param_name, "_distribution.png")),
         plot = p,
-        width = 8,
-        height = 6,
-        dpi = 300
+        width = 8, height = 6, dpi = 300
       )
     }
   }
-  
-  # Return results
-  list(
+
+  return(list(
     summary_stats = summary_stats,
     plots = plots
-  )
+  ))
 }
