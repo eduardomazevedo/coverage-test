@@ -1,0 +1,63 @@
+#!/usr/bin/env Rscript
+
+# Load libraries
+suppressPackageStartupMessages({
+  library(yaml)
+  library(optparse)
+})
+
+# Parse command line argument
+option_list <- list(
+  make_option(c("-j", "--job_number"), type = "integer", help = "Job number (1-indexed)")
+)
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
+if (is.null(opt$job_number)) {
+  stop("Please provide a job number using --job_number")
+}
+
+# Load job list
+job_list <- yaml::read_yaml("assets/list_of_jobs.yaml")$jobs
+
+# Validate job number
+if (opt$job_number < 1 || opt$job_number > length(job_list)) {
+  stop(paste("Invalid job number. Must be between 1 and", length(job_list)))
+}
+
+# Extract job parameters
+job <- job_list[[opt$job_number]]
+
+model_type <- job$model_type
+n_obs <- job$n_obs
+n_bootstraps <- job$n_bootstraps
+softmax_correction <- job$softmax_correction
+chunk_id <- job$chunk_id
+total_chunks <- job$total_chunks
+
+# Display job info
+cat("Running job", opt$job_number, ":\n")
+cat("  model_type:", model_type, "\n")
+cat("  n_obs:", n_obs, "\n")
+cat("  n_bootstraps:", n_bootstraps, "\n")
+cat("  softmax_correction:", softmax_correction, "\n")
+cat("  chunk", chunk_id, "of", total_chunks, "\n")
+
+# Load the bootstrap runner
+source("R/run_bootstrap.R")
+
+# Run the job
+bootstrap_results <- run_bootstrap(
+  model_type = model_type,
+  heritability_source = "snph2",
+  softmax_correction = softmax_correction,
+  n_obs = n_obs,
+  n_bootstraps = n_bootstraps
+)
+
+# Create output path
+dir.create("data/bootstrap_chunks", recursive = TRUE, showWarnings = FALSE)
+outfile <- sprintf("data/bootstrap_chunks/bootstrap_%03d.rds", opt$job_number)
+saveRDS(bootstrap_results, outfile)
+
+cat("Saved results to", outfile, "\n")
