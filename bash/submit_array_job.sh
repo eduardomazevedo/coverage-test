@@ -3,12 +3,9 @@
 #$ -q short.q
 #$ -l m_mem_free=12G
 #$ -t 1-124
+#$ -j y
+#$ -o job_output/$JOB_NAME-$JOB_ID-$TASK_ID.log
 #$ -cwd
-#$ -o logs/
-#$ -e logs/
-
-# Create logs directory if it doesn't exist
-mkdir -p logs
 
 # Print job info
 echo "Running task ID: $SGE_TASK_ID"
