@@ -1,3 +1,14 @@
+rm(list = ls())
+
+source("R/run_bootstrap.R")
+
+
+# Define model types, sample sizes, softmax options, and number of bootstraps
+model_types <- c("lm", "probit", "cox")
+n_obs_vals <- c(1e4, 1e5, 1e6)
+softmax_options <- c("clt", "softmax-fast", "softmax-slow")
+n_bootstraps <- 100  # You can adjust this value as needed
+
 # Initialize runtime_results as an empty list
 runtime_results <- list()
 
