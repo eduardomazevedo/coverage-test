@@ -1,12 +1,12 @@
 #!/usr/bin/env Rscript
 
 # Load libraries
+# Load libraries
 suppressPackageStartupMessages({
   library(yaml)
   library(optparse)
   library(tidyverse)
 })
-options(renv.config.auto.snapshot = FALSE)
 
 # Parse command line argument
 option_list <- list(
@@ -31,6 +31,7 @@ if (opt$job_number < 1 || opt$job_number > length(job_list)) {
 job <- job_list[[opt$job_number]]
 
 model_type <- job$model_type
+heritability_source <- job$heritability_source
 n_obs <- job$n_obs
 n_bootstraps <- job$n_bootstraps
 softmax_correction <- job$softmax_correction
@@ -40,18 +41,25 @@ total_chunks <- job$total_chunks
 # Display job info
 cat("Running job", opt$job_number, ":\n")
 cat("  model_type:", model_type, "\n")
+cat("  softmax_correction:", softmax_correction, "\n")
+cat("  heritability_source:", heritability_source, "\n")
 cat("  n_obs:", n_obs, "\n")
 cat("  n_bootstraps:", n_bootstraps, "\n")
-cat("  softmax_correction:", softmax_correction, "\n")
-cat("  chunk", chunk_id, "of", total_chunks, "\n")
+cat("  chunk_id:", chunk_id, "\n")
+cat("  total_chunks:", total_chunks, "\n")
+
+# Print time
+start_time <- Sys.time()
+cat("  start_time:", format(start_time, "%Y-%m-%d %H:%M:%S"), "\n")
 
 # Load the bootstrap runner
 source("R/run_bootstrap.R")
 
 # Run the job
+set.seed(opt$job_number)
 bootstrap_results <- run_bootstrap(
   model_type = model_type,
-  heritability_source = "snph2",
+  heritability_source = heritability_source,
   softmax_correction = softmax_correction,
   n_obs = n_obs,
   n_bootstraps = n_bootstraps
@@ -63,3 +71,7 @@ outfile <- sprintf("data/bootstrap_chunks/bootstrap_%03d.rds", opt$job_number)
 saveRDS(bootstrap_results, outfile)
 
 cat("Saved results to", outfile, "\n")
+end_time <- Sys.time()
+cat("  end_time:", format(end_time, "%Y-%m-%d %H:%M:%S"), "\n")
+duration <- end_time - start_time
+cat("  duration:", sprintf("%.1f seconds", as.numeric(duration, units = "secs")), "\n")
