@@ -1,11 +1,11 @@
-coverage_report <- function(bootstrap_results, parameters, output_folder = NULL, confidence_level = 0.95) {
-  # Extract true beta values
-  true_beta <- parameters$beta
+coverage_report <- function(bootstrap_results, output_folder = NULL, confidence_level = 0.95) {
+  # Extract true beta values from bootstrap_results
+  true_beta <- bootstrap_results$true_beta
   beta_names <- names(true_beta)
 
   # Extract beta and SE matrices
-  betas_df <- bootstrap_results$betas
-  se_df <- bootstrap_results$standard_errors
+  betas_df <- bootstrap_results$betas_df
+  se_df <- bootstrap_results$se_df
 
   stopifnot(nrow(betas_df) == nrow(se_df))
   n_bootstraps <- nrow(betas_df)

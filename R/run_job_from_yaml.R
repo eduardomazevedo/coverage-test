@@ -4,7 +4,9 @@
 suppressPackageStartupMessages({
   library(yaml)
   library(optparse)
+  library(tidyverse)
 })
+options(renv.config.auto.snapshot = FALSE)
 
 # Parse command line argument
 option_list <- list(

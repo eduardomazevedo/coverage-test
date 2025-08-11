@@ -2,7 +2,7 @@
 #$ -N bootstrap_array
 #$ -q short.q
 #$ -l m_mem_free=12G
-#$ -t 1-124
+#$ -t 1-352
 #$ -j y
 #$ -o job_output/$JOB_NAME-$JOB_ID-$TASK_ID.log
 #$ -cwd
