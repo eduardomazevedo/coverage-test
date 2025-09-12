@@ -25,19 +25,12 @@ parse_filename <- function(filename) {
   # Extract heritability source
   heritability_source <- gsub("h=", "", parts[2])
   
-  # Extract softmax correction (if present)
-  softmax_correction <- "clt"  # default
-  if (length(parts) >= 4 && grepl("^s=", parts[3])) {
-    softmax_correction <- gsub("s=", "", parts[3])
-    sample_size <- gsub("n=", "", parts[4])
-  } else {
-    sample_size <- gsub("n=", "", parts[3])
-  }
+  # No softmax layer anymore
+  sample_size <- gsub("n=", "", parts[3])
   
   return(list(
     model_type = model_type,
     heritability_source = heritability_source,
-    softmax_correction = softmax_correction,
     sample_size = sample_size
   ))
 }
@@ -63,16 +56,7 @@ create_output_dirs <- function(spec_info) {
     dir.create(h_dir, recursive = TRUE)
   }
   
-  # Create softmax-specific directory (for cox models)
-  if (spec_info$model_type == "cox") {
-    s_dir <- file.path(h_dir, paste0("s_", spec_info$softmax_correction))
-    if (!dir.exists(s_dir)) {
-      dir.create(s_dir, recursive = TRUE)
-    }
-    final_dir <- file.path(s_dir, paste0("n_", spec_info$sample_size))
-  } else {
-    final_dir <- file.path(h_dir, paste0("n_", spec_info$sample_size))
-  }
+  final_dir <- file.path(h_dir, paste0("n_", spec_info$sample_size))
   
   if (!dir.exists(final_dir)) {
     dir.create(final_dir, recursive = TRUE)
@@ -96,10 +80,9 @@ main <- function() {
     tryCatch({
       # Parse filename to get specification details
       spec_info <- parse_filename(filename)
-      cat("  Model:", spec_info$model_type, 
-          "| Heritability:", spec_info$heritability_source,
-          "| Softmax:", spec_info$softmax_correction,
-          "| Sample size:", spec_info$sample_size, "\n")
+    cat("  Model:", spec_info$model_type, 
+      "| Heritability:", spec_info$heritability_source,
+      "| Sample size:", spec_info$sample_size, "\n")
       
       # Load bootstrap results
       file_path <- file.path(bootstrap_dir, filename)

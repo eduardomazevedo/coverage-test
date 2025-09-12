@@ -1,4 +1,4 @@
-run_bootstrap <- function(model_type, heritability_source, softmax_correction = "clt", n_obs, n_bootstraps) {
+run_bootstrap <- function(model_type, heritability_source, n_obs, n_bootstraps) {
   # Functions
   source("R/simulate_cox.R")
   source("R/simulate_probit.R")
@@ -23,10 +23,7 @@ run_bootstrap <- function(model_type, heritability_source, softmax_correction = 
   colnames(beta_estimates) <- true_beta_names
   se_estimates <- matrix(NA, nrow = n_bootstraps, ncol = length(true_beta_names))
   colnames(se_estimates) <- true_beta_names
-  psi_estimates <- matrix(NA, nrow = n_bootstraps, ncol = 1)
-  colnames(psi_estimates) <- "psi_hat"
-  alpha_estimates <- matrix(NA, nrow = n_bootstraps, ncol = 1)
-  colnames(alpha_estimates) <- "alpha_hat"
+
   
   for (i in 1:n_bootstraps) {
     # Simulate dataset based on model type
@@ -47,8 +44,7 @@ run_bootstrap <- function(model_type, heritability_source, softmax_correction = 
       gc = simulated_dataset$gc,
       w = simulated_dataset$w,
       model_type = model_type,
-      improvement_ratio = parameters$improvement_ratio,
-      softmax_correction = softmax_correction
+      improvement_ratio = parameters$improvement_ratio
     )
     
     # Extract estimates
@@ -67,10 +63,6 @@ run_bootstrap <- function(model_type, heritability_source, softmax_correction = 
     # Store
     beta_estimates[i, ] <- beta_hat
     se_estimates[i, ] <- se_hat
-    if (model_type == "cox") {
-      psi_estimates[i, ] <- psi_hat
-      alpha_estimates[i, ] <- alpha_hat
-    }
   }
   
   # Convert to data frames
@@ -83,13 +75,10 @@ run_bootstrap <- function(model_type, heritability_source, softmax_correction = 
   list(
     model_type = model_type,
     heritability_source = heritability_source,
-    softmax_correction = softmax_correction,
     n_obs = n_obs,
     n_bootstraps = n_bootstraps,
     true_beta = true_beta,
     betas_df = betas_df,
-    se_df = se_df,
-    psi_estimates = psi_estimates,
-    alpha_estimates = alpha_estimates
+    se_df = se_df
   )
 }

@@ -34,14 +34,12 @@ model_type <- job$model_type
 heritability_source <- job$heritability_source
 n_obs <- job$n_obs
 n_bootstraps <- job$n_bootstraps
-softmax_correction <- job$softmax_correction
 chunk_id <- job$chunk_id
 total_chunks <- job$total_chunks
 
 # Display job info
 cat("Running job", opt$job_number, ":\n")
 cat("  model_type:", model_type, "\n")
-cat("  softmax_correction:", softmax_correction, "\n")
 cat("  heritability_source:", heritability_source, "\n")
 cat("  n_obs:", n_obs, "\n")
 cat("  n_bootstraps:", n_bootstraps, "\n")
@@ -60,7 +58,6 @@ set.seed(opt$job_number)
 bootstrap_results <- run_bootstrap(
   model_type = model_type,
   heritability_source = heritability_source,
-  softmax_correction = softmax_correction,
   n_obs = n_obs,
   n_bootstraps = n_bootstraps
 )

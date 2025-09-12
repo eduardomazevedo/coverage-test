@@ -31,51 +31,40 @@ divisors <- function(n) {
 chunk_size_table <-
   runtimes |>
   mutate(
-    max_chunk_size = floor((30 * 60) / runtime_seconds),
+    max_chunk_size = floor((30 * 60) / runtime_per_bs), # 30 minutes max per chunk
     chunk_size = map_int(max_chunk_size, \(mcs) {
       valid_divisors <- Filter(\(x) x <= mcs, divisors(1000))
       if (length(valid_divisors) == 0) 1 else max(valid_divisors)
     })
   ) |>
-  select(model_type, softmax_correction, n_obs, chunk_size)
+  select(model_type, n_obs, chunk_size)
 
 # Define simulation parameters
 simulation_params <- list(
   lm = list(
-    n_obs = c(1000, 10000, 100000, 1000000),
+    n_obs = c(1e3, 1e4, 1e5),
     n_bootstraps = 1000,
-    softmax_correction = NA,
     heritability_source = c("snph2", "twinh2")
   ),
   probit = list(
-    n_obs = c(1000, 10000, 100000, 1000000),
+    n_obs = c(1e3, 1e4, 1e5),
     n_bootstraps = 1000,
-    softmax_correction = NA,
     heritability_source = c("snph2", "twinh2")
   ),
   cox = list(
-    n_obs = c(1000, 10000, 100000, 1000000),
+    n_obs = c(1e3, 1e4, 1e5),
     n_bootstraps = 1000,
-    softmax_correction = c("clt", "softmax-fast", "softmax-slow"),
     heritability_source = c("snph2", "twinh2")
   )
 )
 
 # Function to create job chunks using chunk_size_table
-create_job_chunks <- function(model_type, n_obs, n_bootstraps, softmax_correction, heritability_source) {
+create_job_chunks <- function(model_type, n_obs, n_bootstraps, heritability_source) {
   match <- chunk_size_table |>
-    filter(
-      model_type == !!model_type,
-      n_obs == !!n_obs,
-      # BUG FIX: previously compared softmax_correction to itself, always true.
-      (is.na(softmax_correction) & is.na(!!softmax_correction)) |
-      (softmax_correction == !!softmax_correction)
-    )
+    filter(model_type == !!model_type, n_obs == !!n_obs)
 
   if (nrow(match) == 0) {
-    warning("Skipping: no chunk size found for ", model_type,
-            ", n_obs = ", n_obs,
-            ", softmax_correction = ", softmax_correction)
+    warning("Skipping: no chunk size found for ", model_type, ", n_obs = ", n_obs)
     return(list())
   }
 
@@ -97,7 +86,6 @@ create_job_chunks <- function(model_type, n_obs, n_bootstraps, softmax_correctio
       model_type = model_type,
       n_obs = n_obs,
       n_bootstraps = this_chunk_size,
-      softmax_correction = if (is.na(softmax_correction)) NULL else softmax_correction,
       heritability_source = heritability_source,
       chunk_id = i,
       total_chunks = total_chunks
@@ -113,40 +101,15 @@ all_jobs <- list()
 
 for (model_type in names(simulation_params)) {
   params <- simulation_params[[model_type]]
-
   for (n_obs in params$n_obs) {
-    if (is.na(params$softmax_correction[1])) {
-      # lm, probit
-      for (hs in params$heritability_source) {
-        jobs <- create_job_chunks(
-          model_type = model_type,
-          n_obs = n_obs,
-          n_bootstraps = params$n_bootstraps,
-          softmax_correction = params$softmax_correction,
-          heritability_source = hs
-        )
-        all_jobs <- c(all_jobs, jobs)
-      }
-    } else {
-      # cox
-      for (softmax_correction in params$softmax_correction) {
-        for (hs in params$heritability_source) {
-          if (n_obs == 1e6 && softmax_correction == "softmax-slow") {
-            cat("Skipping spec: ", model_type, ", n_obs = ", n_obs,
-                ", softmax_correction = ", softmax_correction, "\n")
-            next
-          }
-
-          jobs <- create_job_chunks(
-            model_type = model_type,
-            n_obs = n_obs,
-            n_bootstraps = params$n_bootstraps,
-            softmax_correction = softmax_correction,
-            heritability_source = hs
-          )
-          all_jobs <- c(all_jobs, jobs)
-        }
-      }
+    for (hs in params$heritability_source) {
+      jobs <- create_job_chunks(
+        model_type = model_type,
+        n_obs = n_obs,
+        n_bootstraps = params$n_bootstraps,
+        heritability_source = hs
+      )
+      all_jobs <- c(all_jobs, jobs)
     }
   }
 }
@@ -167,7 +130,7 @@ cat("Sample sizes:", paste(unique(sapply(all_jobs, \(x) x$n_obs)), collapse = ",
 
 # Show chunking summary
 chunk_summary <- bind_rows(all_jobs) %>%
-  group_by(model_type, n_obs, softmax_correction, heritability_source) %>%
+  group_by(model_type, n_obs, heritability_source) %>%
   summarise(
     total_chunks = max(chunk_id),
     total_bootstraps = sum(n_bootstraps),

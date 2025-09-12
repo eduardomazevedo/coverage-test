@@ -1,5 +1,4 @@
 # collect_bootstraps.R
-
 library(purrr)
 library(dplyr)
 library(fs)
@@ -27,15 +26,14 @@ parsed <- map(valid_results, function(x) {
     file = attr(x, "names"),  # capture filename
     model_type = obj$model_type,
     heritability_source = obj$heritability_source,
-    softmax_correction = if (is.null(obj$softmax_correction)) NA_character_ else as.character(obj$softmax_correction),
     n_obs = obj$n_obs,
     n_bootstraps = obj$n_bootstraps,
     object = list(obj)
   )
 }) |> bind_rows()
 
-# Group by full spec
-grouped <- parsed |> group_split(model_type, heritability_source, softmax_correction, n_obs)
+# Group by full spec (without softmax)
+grouped <- parsed |> group_split(model_type, heritability_source, n_obs)
 
 # Process each group
 walk(grouped, function(group_df) {
@@ -44,7 +42,6 @@ walk(grouped, function(group_df) {
   spec_id <- paste0(
     "model=", group_df$model_type[1],
     "_h=", group_df$heritability_source[1],
-    if (!is.na(group_df$softmax_correction[1])) paste0("_s=", group_df$softmax_correction[1]),
     "_n=", group_df$n_obs[1]
   )
   
@@ -59,26 +56,15 @@ walk(grouped, function(group_df) {
   betas_df <- map_dfr(group_df$object, ~ .x$betas_df, .id = "chunk")
   se_df <- map_dfr(group_df$object, ~ .x$se_df, .id = "chunk")
 
-  psi_estimates <- map(group_df$object, ~ .x$psi_estimates) |>
-    discard(is.null) |>
-    map_dfr(~ as_tibble(.x), .id = "chunk")
-
-  alpha_estimates <- map(group_df$object, ~ .x$alpha_estimates) |>
-    discard(is.null) |>
-    map_dfr(~ as_tibble(.x), .id = "chunk")
-
   # Save combined object
   final_obj <- list(
     model_type = group_df$model_type[1],
     heritability_source = group_df$heritability_source[1],
-    softmax_correction = group_df$softmax_correction[1],
     n_obs = group_df$n_obs[1],
     n_bootstraps = nrow(betas_df),
     true_beta = true_betas[[1]],
     betas_df = betas_df,
-    se_df = se_df,
-    psi_estimates = psi_estimates,
-    alpha_estimates = alpha_estimates
+    se_df = se_df
   )
 
   write_rds(final_obj, file = path(output_dir, paste0(spec_id, ".rds")))
