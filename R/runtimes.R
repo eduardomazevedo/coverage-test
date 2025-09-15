@@ -5,7 +5,7 @@ source("R/run_bootstrap.R")
 # Softmax correction fully removed.
 
 model_types <- c("lm", "probit", "cox")
-n_obs_vals <- c(1e3, 1e4, 1e5)
+n_obs_vals <- c(1e3, 1e4, 1e5, 1e6)
 n_bootstraps <- 10
 
 runtime_results <- list()

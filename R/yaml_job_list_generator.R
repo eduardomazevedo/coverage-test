@@ -42,17 +42,17 @@ chunk_size_table <-
 # Define simulation parameters
 simulation_params <- list(
   lm = list(
-    n_obs = c(1e3, 1e4, 1e5),
+    n_obs = c(1e3, 1e4, 1e5, 1e6),
     n_bootstraps = 1000,
     heritability_source = c("snph2", "twinh2")
   ),
   probit = list(
-    n_obs = c(1e3, 1e4, 1e5),
+    n_obs = c(1e3, 1e4, 1e5, 1e6),
     n_bootstraps = 1000,
     heritability_source = c("snph2", "twinh2")
   ),
   cox = list(
-    n_obs = c(1e3, 1e4, 1e5),
+    n_obs = c(1e3, 1e4, 1e5, 1e6),
     n_bootstraps = 1000,
     heritability_source = c("snph2", "twinh2")
   )
