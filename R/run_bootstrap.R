@@ -57,12 +57,12 @@ run_bootstrap <- function(model_type, heritability_source, n_obs, n_bootstraps) 
     }
     
     # Check names for consistency
-    stopifnot(identical(names(beta_hat), true_beta_names))
-    stopifnot(identical(names(se_hat), true_beta_names))
+    stopifnot(setequal(names(beta_hat), true_beta_names))
+    stopifnot(setequal(names(se_hat), true_beta_names))
     
     # Store
-    beta_estimates[i, ] <- beta_hat
-    se_estimates[i, ] <- se_hat
+    beta_estimates[i, ] <- beta_hat[true_beta_names]
+    se_estimates[i, ]   <- se_hat[true_beta_names]
   }
   
   # Convert to data frames
