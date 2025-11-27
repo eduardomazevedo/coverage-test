@@ -1,5 +1,6 @@
 rm(list = ls())
 
+source("R/get_params.R")
 source("R/run_bootstrap.R")
 
 # Softmax correction fully removed.
@@ -11,14 +12,16 @@ n_bootstraps <- 10
 runtime_results <- list()
 
 for (model_type in model_types) {
+  # Load parameters once per model type
+  params <- get_params(model_type, "snph2")
+  
   for (n_obs in n_obs_vals) {
     cat(sprintf("Running: model = %s, n_obs = %.0f\n", model_type, n_obs))
     start_time <- Sys.time()
     run_bootstrap(
-      model_type = model_type,
-      heritability_source = "snph2",
       n_obs = n_obs,
-      n_bootstraps = n_bootstraps
+      n_bootstraps = n_bootstraps,
+      params = params
     )
     elapsed <- as.numeric(Sys.time() - start_time, units = "secs")
     runtime_results[[length(runtime_results) + 1]] <- list(

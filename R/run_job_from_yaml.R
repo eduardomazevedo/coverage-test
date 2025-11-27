@@ -50,17 +50,23 @@ cat("  total_chunks:", total_chunks, "\n")
 start_time <- Sys.time()
 cat("  start_time:", format(start_time, "%Y-%m-%d %H:%M:%S"), "\n")
 
-# Load the bootstrap runner
+# Load required functions
+source("R/get_params.R")
 source("R/run_bootstrap.R")
+
+# Load parameters
+params <- get_params(model_type, heritability_source)
 
 # Run the job
 set.seed(opt$job_number)
 bootstrap_results <- run_bootstrap(
-  model_type = model_type,
-  heritability_source = heritability_source,
   n_obs = n_obs,
-  n_bootstraps = n_bootstraps
+  n_bootstraps = n_bootstraps,
+  params = params
 )
+
+# Add heritability_source to results
+bootstrap_results$heritability_source <- heritability_source
 
 # Create output path
 dir.create("data/bootstrap_chunks", recursive = TRUE, showWarnings = FALSE)
