@@ -1,4 +1,4 @@
-get_params <- function(model_type, snp_source) {
+get_richard_params <- function(model_type, snp_source) {
   # Validate inputs
   if (!model_type %in% c("cox", "probit", "lm")) {
     stop("model_type must be either 'cox', 'probit', or 'lm'")

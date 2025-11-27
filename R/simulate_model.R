@@ -1,4 +1,17 @@
 library(tidyverse)
+#' Simulate dataset for hapr model.
+#'
+#' @param n_observations Number of observations to simulate.
+#' @param beta_g Coefficient for genetic factor.
+#' @param beta_w Coefficient vector for covariates.
+#' @param beta_constant Constant term.
+#' @param theta Adjusted theta parameter vector.
+#' @param var_v Variance component for v.
+#' @param var_epsilon Variance component for epsilon.
+#' @param e_w Expected value vector for w.
+#' @param vcov_w Variance-covariance matrix for w.
+#' @param model_type Model type ("lm", "probit", or "cox").
+#' @return List with y (response), gc (genetic component), and w (covariates tibble).
 simulate_model <- function(n_observations, beta_g, beta_w, beta_constant, theta, var_v, var_epsilon, e_w, vcov_w, model_type) {
   # Validation
   # model_type: "probit", "cox", "lm"
