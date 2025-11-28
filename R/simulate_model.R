@@ -4,15 +4,17 @@ library(tidyverse)
 #' @param n_observations Number of observations to simulate.
 #' @param beta_g Coefficient for genetic factor.
 #' @param beta_w Coefficient vector for covariates.
-#' @param beta_constant Constant term.
 #' @param theta Adjusted theta parameter vector.
 #' @param var_v Variance component for v.
 #' @param var_epsilon Variance component for epsilon.
 #' @param e_w Expected value vector for w.
 #' @param vcov_w Variance-covariance matrix for w.
 #' @param model_type Model type ("lm", "probit", or "cox").
+#' @param beta_intercept Intercept coefficient (default: 0).
+#' @param cox_censoring_time Censoring time for Cox model (default: 10).
+#' @param cox_median_event_probability Event probability for median person for Cox model (default: 0.5).
 #' @return List with y (response), gc (genetic component), and w (covariates tibble).
-simulate_model <- function(n_observations, beta_g, beta_w, beta_constant, theta, var_v, var_epsilon, e_w, vcov_w, model_type) {
+simulate_model <- function(n_observations, beta_g, beta_w, theta, var_v, var_epsilon, e_w, vcov_w, model_type, beta_intercept = 0, cox_censoring_time = 10, cox_median_event_probability = 0.5) {
   # Validation
   # model_type: "probit", "cox", "lm"
   stopifnot(model_type %in% c("probit", "cox", "lm"))
@@ -38,41 +40,45 @@ simulate_model <- function(n_observations, beta_g, beta_w, beta_constant, theta,
   # var_v + var_epsilon <= 1
   stopifnot(var_v + var_epsilon <= 1)
 
+  # Calculate theta_intercept terms so that mean of gf is zero and mean of lp is lp_mean
+  theta_intercept <- as.numeric(- theta %*% e_w)
+
   # Simulate dataset
   # w ~ gaussian(e_w, vcov_w)
   w <- MASS::mvrnorm(n_observations, e_w, vcov_w)
 
   # gf = theta * w + Gaussian noise
-  gf <- (w - e_w) %*% theta + rnorm(nrow(w), 0, sqrt(var_v))
+  gf <- w %*% theta + theta_intercept + rnorm(nrow(w), 0, sqrt(var_v))
   
   # gc = gf + gaussian noise
   gc <- gf + rnorm(nrow(w), 0, sqrt(var_epsilon))
+
+  # Linear predictor
+  lp <- w %*% beta_w + gf * beta_g + beta_intercept
   
   # y lm
   if (model_type == "lm") {
-  y <- (w - e_w) %*% beta_w + gf * beta_g + beta_constant + rnorm(nrow(w), 0, 1)
+    y <- lp + rnorm(nrow(w), 0, 1)
   }
 
   # y probit
   if (model_type == "probit") {
-    y <- (w - e_w) %*% beta_w + gf * beta_g + beta_constant + rnorm(nrow(w), 0, 1)
-    y <- y > 0
+    y <- (lp + rnorm(nrow(w), 0, 1)) > 0
   }
 
   # y cox
   if (model_type == "cox") {
-    # For 'cox', y is linear predictor, so event times t ~ exp with rate = exp(y)
-    linear_predictor <- (w - e_w) %*% beta_w + gf * beta_g + beta_constant
-    t_event <- rexp(n = nrow(w), rate = exp(linear_predictor))
+    median_lp <- as.numeric(e_w %*% beta_w + beta_intercept)
+    rate<- -1 / cox_censoring_time * log(1 - cox_median_event_probability)
 
-    # t censoring ~ uniform between 20 and 80
-    t_censoring <- runif(n = nrow(w), min = 20, max = 80)
+    # For 'cox', y is linear predictor, so event times t ~ exp with rate = exp(y)
+    t_event <- rexp(n = nrow(w), rate = exp(lp - median_lp) * rate)
 
     # t = min(t_event, t_censoring)
-    t <- pmin(t_event, t_censoring)
+    t <- pmin(t_event, cox_censoring_time)
 
     # status = 1 if t_event <= t_censoring, 0 otherwise
-    status <- (t_event <= t_censoring)
+    status <- (t_event <= cox_censoring_time)
 
     # y = survival::Surv(t, status)
     y <- survival::Surv(t, status)
@@ -82,7 +88,7 @@ simulate_model <- function(n_observations, beta_g, beta_w, beta_constant, theta,
   if (is.null(colnames(w))) {
     colnames(w) <- paste0("V", seq_len(ncol(w)))
   }
-
+  
   # Return simulated dataset
   list(
     y = y,

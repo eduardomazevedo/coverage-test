@@ -20,7 +20,7 @@ adjust_theta <- function(theta, var_v, var_epsilon, vcov_w) {
 #' @param n_observations Number of observations per simulation.
 #' @param beta_g Coefficient for genetic factor.
 #' @param beta_w Coefficient vector for covariates.
-#' @param beta_constant Constant term.
+#' @param lp_mean mean of linear predictor used to set beta_constant.
 #' @param theta Adjusted theta parameter vector.
 #' @param var_v Variance component for v.
 #' @param var_epsilon Variance component for epsilon.
@@ -28,16 +28,16 @@ adjust_theta <- function(theta, var_v, var_epsilon, vcov_w) {
 #' @param vcov_w Variance-covariance matrix for w.
 #' @param model_type Model type ("lm", "probit", or "cox").
 #' @return List with betas_df and se_df data frames containing bootstrap estimates.
-run_bootstrap <- function(n_bootstraps, n_observations, beta_g, beta_w, beta_constant, theta, var_v, var_epsilon, e_w, vcov_w, model_type) {
+run_bootstrap <- function(n_bootstraps, n_observations, beta_g, beta_w, theta, var_v, var_epsilon, e_w, vcov_w, model_type, beta_intercept = 0, cox_censoring_time = 10, cox_median_event_probability = 0.5) {
   improvement_ratio <- 1 / (1 - var_epsilon)
   
   beta_estimates_list <- list()
   se_estimates_list <- list()
+  covariate_names <- names(beta_w)
     
   for (i in 1:n_bootstraps) {
     # Simulate dataset based on model type
-    simulated_dataset <- simulate_model(n_observations, beta_g, beta_w, beta_constant, adjusted_theta, var_v, var_epsilon, e_w, vcov_w, model_type)
-    covariate_names <- colnames(simulated_dataset$w)
+    simulated_dataset <- simulate_model(n_observations, beta_g, beta_w, theta, var_v, var_epsilon, e_w, vcov_w, model_type, beta_intercept, cox_censoring_time, cox_median_event_probability)
     
     # Fit model
     fit <- hapr::hapr(

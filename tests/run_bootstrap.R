@@ -5,15 +5,20 @@ n_bootstraps <- 100
 n_observations <- 1000
 beta_g <- 0.42
 beta_w <- c(w1 = 0.07, w2 = -0.05)
-beta_constant <- 0.1
 theta <- c(w1 = 1 / sqrt(3), w2 = 0.0)
 var_v <- 0.2
 var_epsilon <- 0.79
 e_w <- c(w1 = 0, w2 = 0.2)
 vcov_w <- matrix(c(1, 0.2, 0.2, 1), nrow = 2, dimnames = list(names(e_w), names(e_w)))
 
-adjusted_theta <- adjust_theta(theta, var_v, var_epsilon, vcov_w)
+beta_intercept <- 1
+cox_censoring_time <- 10
+cox_median_event_probability <- 0.1
 
+# Adjust theta to get gc variance = 1.
+print("theta")
+print(theta)
+adjusted_theta <- adjust_theta(theta, var_v, var_epsilon, vcov_w)
 print("adjusted_theta")
 print(adjusted_theta)
 
@@ -23,13 +28,13 @@ bootstrap_result_lm <- run_bootstrap(
   n_observations = n_observations,
   beta_g = beta_g,
   beta_w = beta_w,
-  beta_constant = beta_constant,
   theta = adjusted_theta,
   var_v = var_v,
   var_epsilon = var_epsilon,
   e_w = e_w,
   vcov_w = vcov_w,
-  model_type = "lm"
+  model_type = "lm",
+  beta_intercept = beta_intercept
 )
 print("bootstrap_result_lm")
 print(colMeans(bootstrap_result_lm$betas_df))
@@ -40,13 +45,13 @@ bootstrap_result_probit <- run_bootstrap(
   n_observations = n_observations,
   beta_g = beta_g,
   beta_w = beta_w,
-  beta_constant = beta_constant,
   theta = adjusted_theta,
   var_v = var_v,
   var_epsilon = var_epsilon,
   e_w = e_w,
   vcov_w = vcov_w,
-  model_type = "probit"
+  model_type = "probit",
+  beta_intercept = beta_intercept
 )
 print("bootstrap_result_probit")
 print(colMeans(bootstrap_result_probit$betas_df))
@@ -57,13 +62,14 @@ bootstrap_result_cox <- run_bootstrap(
   n_observations = n_observations,
   beta_g = beta_g,
   beta_w = beta_w,
-  beta_constant = beta_constant,
   theta = adjusted_theta,
   var_v = var_v,
   var_epsilon = var_epsilon,
   e_w = e_w,
   vcov_w = vcov_w,
-  model_type = "cox"
+  model_type = "cox",
+  cox_censoring_time = cox_censoring_time,
+  cox_median_event_probability = cox_median_event_probability
 )
 print("bootstrap_result_cox")
 print(colMeans(bootstrap_result_cox$betas_df))
