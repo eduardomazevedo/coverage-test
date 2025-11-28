@@ -5,7 +5,7 @@ source("R/get_richard_params.R")
 model_type <- "cox"
 snp_source <- "twinh2"
 n_bootstraps <- 100
-n_observations <- 10000
+n_observations <- 1000
 
 # Get Richard's parameters
 params <- get_richard_params(model_type = model_type, snp_source = snp_source)
