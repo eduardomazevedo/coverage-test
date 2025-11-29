@@ -9,6 +9,8 @@ source("R/get_richard_params.R")
 
 library(yaml)
 
+set.seed(123)
+
 #' Get simple parameters (hardcoded from test script)
 get_simple_params <- function() {
   list(
@@ -89,7 +91,7 @@ run_job <- function(job_id, yaml_file = "data/list_of_jobs.yaml") {
   # Load parameters
   params <- load_parameters(job$parameter_source, job$model)
   
-  # Adjust theta
+  # Adjust theta (to make gc variance = 1)
   adjusted_theta <- adjust_theta(
     params$theta,
     params$var_v,
